@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title description">
+  <title id="title">Agent Self-Edit Gate</title>
+  <desc id="description">Policy-enforced self-editing for coding agents</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#07111f"/>
+      <stop offset="1" stop-color="#13233d"/>
+    </linearGradient>
+    <linearGradient id="gate" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4ade80"/>
+      <stop offset="1" stop-color="#2dd4bf"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="640" rx="32" fill="url(#background)"/>
+  <circle cx="1110" cy="105" r="180" fill="#2563eb" opacity="0.12"/>
+  <circle cx="1160" cy="590" r="260" fill="#14b8a6" opacity="0.08"/>
+  <g transform="translate(92 116)">
+    <rect x="0" y="0" width="178" height="224" rx="28" fill="#0c1b2f" stroke="#334e70" stroke-width="4"/>
+    <path d="M42 59h94M42 104h68M42 149h82" stroke="#8ba3c2" stroke-width="12" stroke-linecap="round"/>
+    <path d="M190 36h86v152h-86" fill="none" stroke="url(#gate)" stroke-width="18" stroke-linejoin="round"/>
+    <path d="M226 78v68" stroke="#4ade80" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="226" cy="112" r="8" fill="#07111f"/>
+    <path d="M292 58h112c21 0 38 17 38 38v80c0 21-17 38-38 38H292" fill="#102942" stroke="#2dd4bf" stroke-width="4"/>
+    <path d="M326 104l24 24 48-54" fill="none" stroke="#4ade80" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="586" y="210" fill="#f8fafc" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="62" font-weight="700">Agent Self-Edit Gate</text>
+  <text x="590" y="278" fill="#9fb3cc" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30">Agents may improve behaviour.</text>
+  <text x="590" y="320" fill="#9fb3cc" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30">Authority stays protected.</text>
+  <g transform="translate(590 382)">
+    <rect width="480" height="70" rx="16" fill="#07111f" stroke="#28415f" stroke-width="2"/>
+    <text x="25" y="45" fill="#4ade80" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="24">policy → atomic write → receipt</text>
+  </g>
+  <text x="92" y="548" fill="#7690ae" font-family="ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22">Open source · Apache-2.0 · Python 3.12+ · Linux &amp; macOS</text>
+</svg>

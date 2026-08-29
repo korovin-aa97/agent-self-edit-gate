@@ -1,0 +1,22 @@
+# Agent Self-Edit Gate
+
+> Deterministic, policy-enforced mutations for coding-agent behaviour files.
+
+Important limitation: this CLI is an enforcement boundary only when an external
+sandbox, OS policy, or protected broker makes it the agent's only writer.
+
+Primary documentation:
+- README.md: quickstart, scope, and honest limitations
+- docs/THREAT_MODEL.md: actors, trust anchors, addressed threats, and non-goals
+- docs/POLICY_REFERENCE.md: complete TOML policy schema v1
+- docs/RECEIPTS.md: canonical receipt schema v1 and verification semantics
+- docs/ERROR_CODES.md: stable machine-readable refusal families
+- docs/DEPLOYMENT.md: protected CI and OS-isolated broker patterns
+- SECURITY.md: private vulnerability reporting
+
+Agent workflow:
+1. Run `selfedit-gate --policy selfedit-policy.toml check PATH`.
+2. Prefer `replace PATH OLD_FILE NEW_FILE` for the smallest exact change.
+3. Use `write PATH CONTENT_FILE` only for bounded whole-file changes.
+4. Run `verify-receipts` from an independent protected environment.
+5. Never change policy, receipts, hooks, permissions, CI, or sandbox settings.

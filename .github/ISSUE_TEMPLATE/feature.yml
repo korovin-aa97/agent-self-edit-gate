@@ -1,0 +1,31 @@
+name: Feature request
+description: Propose a focused improvement to the write/verification boundary
+title: "feature: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and security invariant
+      description: What fails today, and what deterministic invariant should hold?
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Proposed approach
+  - type: textarea
+    id: tests
+    attributes:
+      label: Hostile and regression cases
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This does not require an LLM to make a policy decision.
+          required: true
+        - label: This does not add telemetry or a hosted control plane.
+          required: true

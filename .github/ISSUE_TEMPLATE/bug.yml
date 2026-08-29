@@ -1,0 +1,34 @@
+name: Bug report
+description: Report reproducible incorrect behavior (use private reporting for vulnerabilities)
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not disclose vulnerabilities here; use the Security tab."
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: ["Linux", "macOS", "Other / unsupported"]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproduction
+      description: Include policy, command, expected result, and actual result without secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: JSON error/output
+      render: shell

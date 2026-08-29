@@ -1,6 +1,6 @@
 # Agent Self-Edit Gate — Agent Bootstrap
 
-Last updated: 2026-08-29. Repository status: **private extraction draft**.
+Last updated: 2026-08-29. Repository status: **v0.1.0 public-release candidate**.
 
 Read this file first, then `README.md`, `selfedit-policy.example.toml`, the
 current source, and `docs/PUBLIC_RELEASE_PLAN.md` before changing anything.
@@ -23,14 +23,16 @@ already occupied and implies protections this tool cannot provide.
 
 ## Current state
 
-- Version `0.0.1`; private and intentionally unpublished.
-- The CLI supports policy loading, path containment, deny-before-allow
-  classification, exact replacement, atomic writes, and intent/commit receipts.
-- `selfedit-policy.example.toml` sketches mutable and immutable zones.
-- There are no tests, public license, threat model, release workflow, package,
-  or supported-engine profiles yet.
-- The README explicitly states that this is not a security boundary while an
-  agent can write around the CLI.
+- Version `0.1.0`, packaged under Apache-2.0.
+- The CLI supports bounded checks, exact replacement, whole-file writes,
+  atomic replacement, deterministic JSON errors, and receipt verification.
+- Policy and receipt schemas are versioned at v1.
+- Generic, Claude Code, and Codex profiles are data files, not engine branches.
+- Hostile tests cover traversal, symlinks, overlap, binary/extension/size
+  limits, races, audit failures, crashes, stale intents, policy swaps, and
+  receipt truncation.
+- The README and threat model explicitly state that this is not a security
+  boundary while an agent can write around the CLI.
 
 ## Non-negotiable boundaries
 
@@ -49,14 +51,11 @@ already occupied and implies protections this tool cannot provide.
 
 ## Next work, in order
 
-1. Write `docs/THREAT_MODEL.md` before extending the implementation.
-2. Specify policy semantics and the protected/mutable/immutable overlap rules.
-3. Finish the two-phase receipt protocol and crash-recovery verification.
-4. Add profiles for Claude Code, Codex, and one neutral repository layout.
-5. Add hostile-input and crash tests, then package the CLI.
-6. Validate the model with independent security review or design partners.
-7. Complete `docs/PUBLIC_RELEASE_PLAN.md`; publish only after explicit owner
-   authorization.
+1. Preserve schema compatibility and the deny-before-allow invariant.
+2. Triage security reports before feature requests.
+3. Arrange independent security review or design-partner validation.
+4. Consider signed independent receipt anchors and reviewed policy rotation.
+5. Keep scope aligned with `docs/ROADMAP.md`.
 
 ## v0.1 definition of done
 

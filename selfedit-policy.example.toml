@@ -1,12 +1,17 @@
+schema_version = 1
+
 [gate]
 root = "."
 receipt_log = ".selfedit-gate/receipts.jsonl"
 max_bytes = 262144
+max_changed_bytes = 65536
+allow_create = false
 
 [[zones]]
 name = "behaviour"
 mode = "mutable"
 patterns = [
+  "AGENTS.md",
   ".claude/agents/*.md",
   ".claude/prompts/*.md",
   ".claude/skills/**/*.md",
@@ -20,10 +25,21 @@ extensions = [".md", ".toml"]
 name = "authority"
 mode = "immutable"
 patterns = [
+  "selfedit-policy.toml",
+  ".selfedit-gate/**",
   ".claude/settings*.json",
   ".claude/hooks/**",
   ".claude/policy/**",
   ".codex/config.toml",
   ".codex/hooks/**",
   ".codex/policy/**",
+]
+
+[[zones]]
+name = "repository-controls"
+mode = "protected"
+patterns = [
+  ".github/**",
+  ".git/**",
+  "CODEOWNERS",
 ]

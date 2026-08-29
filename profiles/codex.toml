@@ -1,0 +1,29 @@
+schema_version = 1
+
+[gate]
+root = "."
+receipt_log = ".selfedit-gate/receipts.jsonl"
+max_bytes = 262144
+max_changed_bytes = 65536
+allow_create = false
+
+[[zones]]
+name = "codex-behaviour"
+mode = "mutable"
+patterns = ["AGENTS.md", ".codex/agents/*.toml", ".codex/skills/**/*.md"]
+extensions = [".md", ".toml"]
+
+[[zones]]
+name = "codex-authority"
+mode = "immutable"
+patterns = [
+  "selfedit-policy.toml",
+  ".selfedit-gate/**",
+  ".codex/config.toml",
+  ".codex/hooks/**",
+]
+
+[[zones]]
+name = "repository-authority"
+mode = "protected"
+patterns = [".git/**", ".github/**", "CODEOWNERS"]

@@ -1,192 +1,122 @@
-"""Policy-enforced writes for agent behaviour files."""
+"""Command-line interface for Agent Self-Edit Gate."""
 
 from __future__ import annotations
 
 import argparse
-import datetime as dt
-import fnmatch
-import hashlib
 import json
-import os
-import tempfile
-import tomllib
-from dataclasses import dataclass
+import sys
 from pathlib import Path
 from typing import Any
 
-
-@dataclass(frozen=True)
-class Zone:
-    """One ordered policy zone."""
-
-    name: str
-    mode: str
-    patterns: tuple[str, ...]
-    extensions: tuple[str, ...]
+from . import __version__
+from .errors import GateError
+from .gate import check, exact_replace, guarded_write, verify_receipts
+from .policy import load_policy
 
 
-@dataclass(frozen=True)
-class Policy:
-    """Loaded repository write policy."""
-
-    root: Path
-    receipt_log: Path
-    max_bytes: int
-    zones: tuple[Zone, ...]
-    sha256: str
-
-
-class GateError(RuntimeError):
-    """A refused or invalid write."""
-
-
-def _sha(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
-
-
-def load_policy(path: Path) -> Policy:
-    raw = path.read_bytes()
-    data = tomllib.loads(raw.decode("utf-8"))
-    gate = data.get("gate", {})
-    policy_dir = path.resolve().parent
-    root_value = Path(str(gate.get("root", ".")))
-    root = (policy_dir / root_value).resolve()
-    receipt_value = Path(str(gate.get("receipt_log", ".selfedit-gate/receipts.jsonl")))
-    receipt_log = receipt_value if receipt_value.is_absolute() else root / receipt_value
-    zones = tuple(
-        Zone(
-            name=str(item["name"]),
-            mode=str(item["mode"]),
-            patterns=tuple(str(value) for value in item.get("patterns", [])),
-            extensions=tuple(str(value) for value in item.get("extensions", [])),
-        )
-        for item in data.get("zones", [])
-    )
-    return Policy(
-        root=root,
-        receipt_log=receipt_log,
-        max_bytes=int(gate.get("max_bytes", 262_144)),
-        zones=zones,
-        sha256=_sha(raw),
-    )
-
-
-def resolve_target(policy: Policy, raw: str) -> tuple[Path, str]:
-    candidate = Path(raw)
-    if not candidate.is_absolute():
-        candidate = policy.root / candidate
-    resolved = candidate.parent.resolve() / candidate.name
-    if resolved.is_symlink():
-        raise GateError("target is a symlink")
+def _bounded_read(path: Path, limit: int, *, label: str) -> bytes:
     try:
-        relative = resolved.relative_to(policy.root).as_posix()
-    except ValueError as exc:
-        raise GateError("target resolves outside the policy root") from exc
-    return resolved, relative
+        if str(path) == "-":
+            data = sys.stdin.buffer.read(limit + 1)
+        else:
+            with path.open("rb") as stream:
+                data = stream.read(limit + 1)
+    except OSError as exc:
+        raise GateError("E_INPUT_READ", f"cannot read {label}: {exc}") from exc
+    if len(data) > limit:
+        raise GateError("E_INPUT_SIZE", f"{label} exceeds {limit} bytes")
+    return data
 
 
-def classify(policy: Policy, relative: str) -> Zone:
-    matches: list[Zone] = []
-    for zone in policy.zones:
-        if any(fnmatch.fnmatch(relative, pattern) for pattern in zone.patterns):
-            matches.append(zone)
-    immutable = next((zone for zone in matches if zone.mode == "immutable"), None)
-    if immutable is not None:
-        raise GateError(f"{relative} is immutable ({immutable.name})")
-    mutable = next((zone for zone in matches if zone.mode == "mutable"), None)
-    if mutable is None:
-        raise GateError(f"{relative} is not in a mutable zone")
-    if mutable.extensions and Path(relative).suffix not in mutable.extensions:
-        raise GateError(f"extension is not allowed by zone {mutable.name}")
-    return mutable
-
-
-def append_receipt(policy: Policy, record: dict[str, Any]) -> None:
-    policy.receipt_log.parent.mkdir(parents=True, exist_ok=True)
-    line = json.dumps(record, sort_keys=True) + "\n"
-    with policy.receipt_log.open("a", encoding="utf-8") as stream:
-        stream.write(line)
-        stream.flush()
-        os.fsync(stream.fileno())
-
-
-def atomic_write(target: Path, content: bytes) -> None:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    descriptor, raw_path = tempfile.mkstemp(prefix=f".{target.name}.", dir=target.parent)
-    temp_path = Path(raw_path)
-    try:
-        with os.fdopen(descriptor, "wb") as stream:
-            stream.write(content)
-            stream.flush()
-            os.fsync(stream.fileno())
-        temp_path.replace(target)
-    finally:
-        temp_path.unlink(missing_ok=True)
-
-
-def guarded_write(policy: Policy, target: Path, relative: str, content: bytes) -> None:
-    if len(content) > policy.max_bytes:
-        raise GateError(f"content exceeds max_bytes={policy.max_bytes}")
-    classify(policy, relative)
-    before = target.read_bytes() if target.exists() else b""
-    operation_id = hashlib.sha256(
-        f"{relative}:{dt.datetime.now(dt.UTC).isoformat()}".encode()
-    ).hexdigest()[:16]
-    base = {
-        "operation_id": operation_id,
-        "path": relative,
-        "policy_sha256": policy.sha256,
-        "before_sha256": _sha(before),
-    }
-    append_receipt(policy, {**base, "phase": "intent"})
-    atomic_write(target, content)
-    append_receipt(policy, {**base, "phase": "commit", "after_sha256": _sha(content)})
-
-
-def command_check(args: argparse.Namespace) -> int:
-    policy = load_policy(args.policy)
-    _, relative = resolve_target(policy, args.target)
-    zone = classify(policy, relative)
-    print(f"mutable: {relative} ({zone.name})")
-    return 0
-
-
-def command_replace(args: argparse.Namespace) -> int:
-    policy = load_policy(args.policy)
-    target, relative = resolve_target(policy, args.target)
-    before = target.read_text(encoding="utf-8")
-    old = args.old_file.read_text(encoding="utf-8")
-    new = args.new_file.read_text(encoding="utf-8")
-    if not old:
-        raise GateError("replacement anchor is empty")
-    count = before.count(old)
-    if count != 1:
-        raise GateError(f"replacement anchor matched {count} times")
-    guarded_write(policy, target, relative, before.replace(old, new, 1).encode())
-    print(f"updated: {relative}")
-    return 0
+def _emit(payload: dict[str, Any], *, as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(payload, sort_keys=True))
+    elif payload.get("ok"):
+        result = payload.get("result", {})
+        if "valid" in result:
+            print(f"valid: {result['operations']} operations, {result['records']} records")
+        elif "mutable" in result:
+            print(f"mutable: {result['path']} ({result['zone']})")
+        else:
+            print(f"updated: {result['path']} ({result['operation_id']})")
+    else:
+        error = payload["error"]
+        print(f"selfedit-gate: {error['code']}: {error['message']}", file=sys.stderr)
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="selfedit-gate")
-    parser.add_argument(
-        "--policy", type=Path, default=Path("selfedit-policy.toml")
+    parser = argparse.ArgumentParser(
+        prog="selfedit-gate",
+        description="Policy-enforced writes for coding-agent behaviour files.",
     )
+    parser.add_argument("--policy", type=Path, default=Path("selfedit-policy.toml"))
+    parser.add_argument("--json", action="store_true", help="emit stable JSON")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    check = subparsers.add_parser("check")
-    check.add_argument("target")
-    check.set_defaults(handler=command_check)
-    replace = subparsers.add_parser("replace")
-    replace.add_argument("target")
-    replace.add_argument("old_file", type=Path)
-    replace.add_argument("new_file", type=Path)
-    replace.set_defaults(handler=command_replace)
+
+    check_parser = subparsers.add_parser("check", help="classify a target path")
+    check_parser.add_argument("target")
+
+    replace_parser = subparsers.add_parser(
+        "replace", help="replace one exact byte sequence in an existing file"
+    )
+    replace_parser.add_argument("target")
+    replace_parser.add_argument("old_file", type=Path)
+    replace_parser.add_argument("new_file", type=Path)
+
+    write_parser = subparsers.add_parser(
+        "write", help="write a complete UTF-8 file through the policy gate"
+    )
+    write_parser.add_argument("target")
+    write_parser.add_argument("content_file", type=Path, help="file path, or - for stdin")
+
+    verify_parser = subparsers.add_parser(
+        "verify-receipts", help="verify the receipt and current-file hash chains"
+    )
+    verify_parser.add_argument(
+        "--no-current-files",
+        action="store_true",
+        help="verify the journal only, without comparing current files",
+    )
     return parser
 
 
+def run(args: argparse.Namespace) -> dict[str, Any]:
+    policy = load_policy(args.policy)
+    if args.command == "check":
+        return check(policy, args.target)
+    if args.command == "replace":
+        old = _bounded_read(args.old_file, policy.max_bytes, label="old anchor")
+        new = _bounded_read(args.new_file, policy.max_bytes, label="replacement")
+        return exact_replace(policy, args.target, old, new)
+    if args.command == "write":
+        content = _bounded_read(args.content_file, policy.max_bytes, label="content")
+        return guarded_write(policy, args.target, content, action="write")
+    if args.command == "verify-receipts":
+        return verify_receipts(policy, check_files=not args.no_current_files)
+    raise GateError("E_COMMAND", f"unknown command {args.command!r}")
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
     try:
-        return int(args.handler(args))
-    except (GateError, OSError, KeyError, ValueError, tomllib.TOMLDecodeError) as exc:
-        raise SystemExit(f"selfedit-gate: {exc}") from exc
+        result = run(args)
+    except GateError as exc:
+        _emit(
+            {"ok": False, "error": {"code": exc.code, "message": exc.message}},
+            as_json=args.json,
+        )
+        return 2
+    except (OSError, ValueError) as exc:
+        _emit(
+            {"ok": False, "error": {"code": "E_INTERNAL_IO", "message": str(exc)}},
+            as_json=args.json,
+        )
+        return 2
+    _emit({"ok": True, "result": result}, as_json=args.json)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

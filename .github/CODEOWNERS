@@ -1,0 +1,7 @@
+* @korovin-aa97
+
+/selfedit-policy.example.toml @korovin-aa97
+/src/selfedit_gate/policy.py @korovin-aa97
+/src/selfedit_gate/receipts.py @korovin-aa97
+/docs/THREAT_MODEL.md @korovin-aa97
+/.github/ @korovin-aa97

@@ -1,7 +1,7 @@
 # Agent Self-Edit Gate — Public Release Plan
 
-Status: private draft. Target: an honest, security-reviewed `v0.1.0` public
-release. This plan is an execution checklist for a future agent session.
+Status: v0.1.0 release execution record. Target: an honest public alpha release.
+Unchecked items require owner/account action or post-release operation.
 
 ## Release thesis
 
@@ -23,45 +23,45 @@ Never call it a generic firewall or sandbox.
 
 ## Phase 0 — Revalidate the opportunity
 
-- [ ] Search GitHub, PyPI, npm, HN, Reddit, and the web directly for self-edit
+- [x] Search GitHub, PyPI, npm, HN, Reddit, and the web directly for self-edit
       policy tools. Use a browser user agent for sites hidden from search bots.
-- [ ] Recheck adjacent tools such as agent firewalls, package managers, policy
+- [x] Recheck adjacent tools such as agent firewalls, package managers, policy
       gateways, protected-skills proposals, and native Claude/Codex controls.
-- [ ] Record dated findings and exact evidence URLs in `docs/COMPETITORS.md`.
-- [ ] Recheck the repository, PyPI, and command names. Decide whether the public
+- [x] Record dated findings and exact evidence URLs in `docs/COMPETITORS.md`.
+- [x] Recheck the repository, PyPI, and command names. Decide whether the public
       command remains `selfedit-gate`.
-- [ ] Confirm the wedge still exists. Stop or reposition if a maintained direct
+- [x] Confirm the wedge still exists. Stop or reposition if a maintained direct
       peer already provides runtime self-edit zones plus independent receipts.
-- [ ] Choose a license. Apache-2.0 is the current recommendation because patent
+- [x] Choose a license. Apache-2.0 is the current recommendation because patent
       terms matter for a security-adjacent policy tool.
 
 ## Phase 1 — Security design before features
 
-- [ ] Write `docs/THREAT_MODEL.md`: assets, actors, prompt injection, direct
+- [x] Write `docs/THREAT_MODEL.md`: assets, actors, prompt injection, direct
       shell/tool writes, policy tampering, receipt tampering, symlinks, traversal,
       crash points, and external trust anchors.
-- [ ] State the core limitation in the first README screen: without sandbox or
+- [x] State the core limitation in the first README screen: without sandbox or
       filesystem policy making this gateway the only writer, it is convention,
       not enforcement.
-- [ ] Version the policy and receipt schemas.
-- [ ] Specify deny-before-allow overlap, extension rules, file/byte/diff limits,
+- [x] Version the policy and receipt schemas.
+- [x] Specify deny-before-allow overlap, extension rules, file/byte/diff limits,
       creation policy, ownership/permissions, and realpath containment.
-- [ ] Complete two-phase receipts: intent with before/policy hashes, atomic
+- [x] Complete two-phase receipts: intent with before/policy hashes, atomic
       write, commit with after hash, and verifier handling for dangling intents.
-- [ ] Define how protected CI or another independent anchor verifies receipts.
+- [x] Define how protected CI or another independent anchor verifies receipts.
 
 Exit gate: an external reviewer can explain exactly what the tool stops, what
 it cannot stop, and which deployment assumptions make the guarantee true.
 
 ## Phase 2 — Build and validate v0.1
 
-- [ ] Implement bounded `check`, exact `replace`, whole-file `write`, and
+- [x] Implement bounded `check`, exact `replace`, whole-file `write`, and
       `verify-receipts` commands.
-- [ ] Add generic, Claude Code, and Codex policy profiles; keep profiles data,
+- [x] Add generic, Claude Code, and Codex policy profiles; keep profiles data,
       not hard-coded product branches.
-- [ ] Add deterministic error codes and JSON output.
-- [ ] Add unit and integration tests for every policy branch.
-- [ ] Add hostile cases: symlink file/parent, traversal, race, ambiguous anchor,
+- [x] Add deterministic error codes and JSON output.
+- [x] Add unit and integration tests for every policy branch.
+- [x] Add hostile cases: symlink file/parent, traversal, race, ambiguous anchor,
       binary/extension mismatch, oversized diff, audit directory failure,
       interrupted write, stale intent, policy swap, receipt truncation.
 - [ ] Test on Linux and macOS; either support Windows or mark it unsupported.
@@ -73,32 +73,32 @@ depends on the agent's own unrestricted testimony.
 
 ## Phase 3 — Package the repository
 
-- [ ] Select the final name, version, license, and public package metadata.
-- [ ] Upgrade README: problem, 15-second demo, honest boundary, quickstart,
+- [x] Select the final name, version, license, and public package metadata.
+- [x] Upgrade README: problem, 15-second demo, honest boundary, quickstart,
       policy example, architecture, receipts, comparison table, limitations,
       roadmap, and portfolio signature.
 - [ ] Add `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`,
       `CODE_OF_CONDUCT.md`, issue/PR templates, and 3–5 real `good first issue`s.
-- [ ] Add `docs/POLICY_REFERENCE.md`, `docs/RECEIPTS.md`, and deployment recipes.
-- [ ] Add `llms.txt` and an agent skill showing the safe edit workflow if useful.
-- [ ] Add CI for lint, type checking, tests, packaging, and hostile fixtures.
+- [x] Add `docs/POLICY_REFERENCE.md`, `docs/RECEIPTS.md`, and deployment recipes.
+- [x] Add `llms.txt` and an agent skill showing the safe edit workflow if useful.
+- [x] Add CI for lint, type checking, tests, packaging, and hostile fixtures.
 - [ ] Add OIDC trusted publishing for PyPI; never store a long-lived token.
-- [ ] Generate a 1280x640 social preview and a deterministic terminal demo.
+- [x] Generate a 1280x640 social preview and a deterministic terminal demo.
 - [ ] Configure GitHub description/topics with `ai-agents`, `coding-agents`,
       `policy-as-code`, `agent-security`, `claude-code`, `codex`, `python`, and
       `developer-tools` only where accurate.
 
 ## Phase 4 — Pre-public rehearsal
 
-- [ ] Install the built artifact in a clean temporary environment.
-- [ ] Run the full documented demo in a disposable repository.
-- [ ] Confirm every deny example fails and every allow example succeeds.
-- [ ] Inspect package contents, README rendering, links, wheel metadata, and
+- [x] Install the built artifact in a clean temporary environment.
+- [x] Run the full documented demo in a disposable repository.
+- [x] Confirm every deny example fails and every allow example succeeds.
+- [x] Inspect package contents, README rendering, links, wheel metadata, and
       source distribution.
-- [ ] Scan git history and files for secrets, private paths, customer data,
+- [x] Scan git history and files for secrets, private paths, customer data,
       organization names, internal IDs, and proprietary topology.
-- [ ] Run dependency/security scans and review generated artifacts.
-- [ ] Re-run the Phase 0 competitor and name checks on the day of launch.
+- [x] Run dependency/security scans and review generated artifacts.
+- [x] Re-run the Phase 0 competitor and name checks on the day of launch.
 - [ ] Prepare release notes, Show HN draft, native Reddit drafts, dev.to article,
       Habr adaptation, FAQ, and honest limitations before changing visibility.
 
