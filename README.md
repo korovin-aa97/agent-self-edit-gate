@@ -124,14 +124,14 @@ See the complete [policy reference](docs/POLICY_REFERENCE.md) and ready-to-copy
 ## What happens on a write
 
 ```mermaid
-flowchart LR
-    A["Requested edit"] --> B["Classify path\ndeny before allow"]
+flowchart TD
+    A["Requested\nedit"] --> B["Classify path\ndeny before allow"]
     B --> C["Bound content\nand hash target"]
     C --> D["fsync intent\nreceipt"]
-    D --> E["Recheck policy\nand target identity"]
-    E --> F["Atomic replace\nand directory fsync"]
+    D --> E["Recheck policy\nand target\nidentity"]
+    E --> F["Atomic replace\nand directory\nfsync"]
     F --> G["fsync commit\nreceipt"]
-    G --> H["Independent verifier"]
+    G --> H["Independent\nverifier"]
 ```
 
 Every receipt names the exact policy, before bytes, proposed bytes, operation,
