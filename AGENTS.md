@@ -1,6 +1,6 @@
 # Agent Self-Edit Gate — Agent Bootstrap
 
-Last updated: 2026-08-29. Repository status: **v0.1.0 public-release candidate**.
+Last updated: 2026-08-29. Repository status: **public v0.1.0 release**.
 
 Read this file first, then `README.md`, `selfedit-policy.example.toml`, the
 current source, and `docs/PUBLIC_RELEASE_PLAN.md` before changing anything.

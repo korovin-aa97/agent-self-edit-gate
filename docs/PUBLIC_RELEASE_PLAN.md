@@ -77,14 +77,14 @@ depends on the agent's own unrestricted testimony.
 - [x] Upgrade README: problem, 15-second demo, honest boundary, quickstart,
       policy example, architecture, receipts, comparison table, limitations,
       roadmap, and portfolio signature.
-- [ ] Add `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`,
+- [x] Add `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`,
       `CODE_OF_CONDUCT.md`, issue/PR templates, and 3–5 real `good first issue`s.
 - [x] Add `docs/POLICY_REFERENCE.md`, `docs/RECEIPTS.md`, and deployment recipes.
 - [x] Add `llms.txt` and an agent skill showing the safe edit workflow if useful.
 - [x] Add CI for lint, type checking, tests, packaging, and hostile fixtures.
 - [ ] Add OIDC trusted publishing for PyPI; never store a long-lived token.
 - [x] Generate a 1280x640 social preview and a deterministic terminal demo.
-- [ ] Configure GitHub description/topics with `ai-agents`, `coding-agents`,
+- [x] Configure GitHub description/topics with `ai-agents`, `coding-agents`,
       `policy-as-code`, `agent-security`, `claude-code`, `codex`, `python`, and
       `developer-tools` only where accurate.
 
@@ -108,10 +108,10 @@ Do not execute this phase without an explicit owner instruction.
 
 1. [ ] Configure a pending PyPI trusted publisher for this repository and
        `.github/workflows/release.yml`.
-2. [ ] Change GitHub visibility to public.
-3. [ ] Immediately confirm LICENSE, README/demo, description, topics, and clean
+2. [x] Change GitHub visibility to public.
+3. [x] Immediately confirm LICENSE, README/demo, description, topics, and clean
        history are visible.
-4. [ ] Enable secret scanning, push protection, private vulnerability reporting,
+4. [x] Enable secret scanning, push protection, private vulnerability reporting,
        and CodeQL/default code scanning where available.
 5. [ ] Upload social preview and pin the repository on the owner profile.
 6. [ ] Tag `v0.1.0`; let CI publish through OIDC.
