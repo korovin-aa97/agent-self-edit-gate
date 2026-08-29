@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-self-edit-gate"
+version = "0.0.1"
+description = "Draft policy-enforced self-edit gateway for coding agents"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+selfedit-gate = "selfedit_gate.cli:main"

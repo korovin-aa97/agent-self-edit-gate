@@ -1,0 +1,29 @@
+[gate]
+root = "."
+receipt_log = ".selfedit-gate/receipts.jsonl"
+max_bytes = 262144
+
+[[zones]]
+name = "behaviour"
+mode = "mutable"
+patterns = [
+  ".claude/agents/*.md",
+  ".claude/prompts/*.md",
+  ".claude/skills/**/*.md",
+  ".codex/agents/*.toml",
+  ".codex/prompts/*.md",
+  ".codex/skills/**/*.md",
+]
+extensions = [".md", ".toml"]
+
+[[zones]]
+name = "authority"
+mode = "immutable"
+patterns = [
+  ".claude/settings*.json",
+  ".claude/hooks/**",
+  ".claude/policy/**",
+  ".codex/config.toml",
+  ".codex/hooks/**",
+  ".codex/policy/**",
+]
