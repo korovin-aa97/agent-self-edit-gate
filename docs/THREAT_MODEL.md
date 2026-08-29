@@ -1,6 +1,6 @@
 # Threat model
 
-This document defines the security claim for Agent Self-Edit Gate v0.1.0. It is
+This document defines the security claim for Agent Self-Edit Gate v0.1.1. It is
 part of the product contract, not a marketing appendix.
 
 ## Security claim
@@ -56,6 +56,7 @@ the editing agent's write authority.
 | Protected/mutable overlap | protected or immutable always wins |
 | Unsupported or binary content | extension allowlist, UTF-8 requirement, NUL refusal |
 | Resource exhaustion | bounded input, file, changed-byte, and journal sizes |
+| FIFO/device blocking | non-blocking opens plus regular-file checks |
 | Ambiguous edit | exact replacement anchor must occur once |
 | Target race | parent directory descriptor plus inode/device/owner re-check before replace |
 | Partial target write | same-directory temporary file, `fsync`, atomic replace, directory `fsync` |
@@ -63,7 +64,7 @@ the editing agent's write authority.
 | Receipt tampering/truncation | ordered SHA-256 record chain and strict final-newline parsing |
 | Crash before write | an intent may remain; verification reports a dangling intent |
 | Crash after replace/before commit | current hash plus dangling intent exposes incomplete protocol |
-| Audit path failure | owned, non-group/world-writable journal and durable intent before mutation |
+| Audit path failure | safe owned directories, single-link journal, and durable intent before mutation |
 | Concurrent gate writers | exclusive advisory journal lock serializes gate operations |
 
 `protected` and `immutable` have identical deny behaviour in v0.1. Their names
@@ -84,6 +85,9 @@ workflow, while immutable files are expected never to be changed by agents.
   make a policy decision.
 - Network filesystems may weaken `fsync`, locking, inode, or atomic-replace
   assumptions. v0.1 supports local filesystems on Linux and macOS only.
+- Renaming a target parent directory concurrently with the final descriptor
+  checks remains outside the portable v0.1 guarantee; deny such alternate
+  writes with the external boundary.
 - A privileged local process can defeat user-level ownership and path checks.
 
 ## Crash protocol

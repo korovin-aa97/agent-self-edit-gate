@@ -40,6 +40,7 @@ python -m pip install agent_self_edit_gate-0.1.0-py3-none-any.whl
 selfedit-gate --version
 ```
 
-Python 3.12+ on Linux and macOS is supported. PyPI publication will follow after
-the owner configures OIDC trusted publishing; no long-lived publishing token is
-stored in the repository.
+Python 3.12+ on Linux and macOS is supported. This version was subsequently
+published through OIDC trusted publishing at
+[PyPI](https://pypi.org/project/agent-self-edit-gate/0.1.0/); no long-lived
+publishing token is stored in the repository.

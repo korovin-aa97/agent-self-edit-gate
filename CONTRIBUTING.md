@@ -24,6 +24,21 @@ uv run pytest --cov=selfedit_gate --cov-report=term-missing
 uv build
 ```
 
+Before a release or security-sensitive pull request, also run:
+
+```bash
+actionlint
+uvx pip-audit
+uvx bandit -q -r src
+distribution_dir=$(mktemp -d)
+uv build --out-dir "$distribution_dir"
+uvx --from twine==7.0.0 twine check "$distribution_dir"/*
+```
+
+CI installs both the wheel and source distribution in clean environments. A
+release tag is accepted only after all required Linux/macOS checks are green on
+that exact commit.
+
 Every behaviour change needs a regression test and a changelog entry. Public
 interfaces are typed. Policy decisions must remain deterministic and fail
 closed. Do not weaken deny precedence or the honest external-boundary statement.

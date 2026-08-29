@@ -63,8 +63,29 @@ def test_unknown_policy_keys_and_versions_fail(repository: Path) -> None:
     assert_code("E_POLICY_KEY", lambda: load_policy(path))
 
 
+@pytest.mark.parametrize("invalid_version", ["true", "1.0"])
+def test_policy_version_requires_an_integer(repository: Path, invalid_version: str) -> None:
+    path = write_policy(repository)
+    path.write_text(
+        path.read_text().replace("schema_version = 1", f"schema_version = {invalid_version}")
+    )
+    assert_code("E_POLICY_VERSION", lambda: load_policy(path))
+
+
+def test_invalid_zone_mode_is_a_policy_error(repository: Path) -> None:
+    path = write_policy(repository)
+    path.write_text(path.read_text().replace('mode = "mutable"', 'mode = ["mutable"]'))
+    assert_code("E_POLICY_ZONES", lambda: load_policy(path))
+
+
 def test_receipt_path_must_stay_inside_root(repository: Path) -> None:
     path = write_policy(repository, receipt_log="../outside.jsonl")
+    assert_code("E_POLICY_RECEIPTS", lambda: load_policy(path))
+
+
+@pytest.mark.parametrize("receipt_log", ["", "."])
+def test_receipt_path_must_name_a_file(repository: Path, receipt_log: str) -> None:
+    path = write_policy(repository, receipt_log=receipt_log)
     assert_code("E_POLICY_RECEIPTS", lambda: load_policy(path))
 
 

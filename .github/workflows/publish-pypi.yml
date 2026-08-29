@@ -6,7 +6,7 @@ on:
       tag:
         description: "Existing v-prefixed release tag"
         required: true
-        default: "v0.1.0"
+        default: "v0.1.1"
 
 permissions:
   contents: read
@@ -19,9 +19,22 @@ jobs:
       name: pypi
       url: https://pypi.org/project/agent-self-edit-gate/
     steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.tag }}
-      - uses: astral-sh/setup-uv@v7
-      - run: uv build
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Download the exact immutable GitHub Release artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          release_state=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" \
+            --jq '[.draft, .prerelease, .immutable] | join(" ")')
+          test "$release_state" = "false false true"
+          mkdir dist
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern '*.whl' --pattern '*.tar.gz' --dir dist
+          gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"
+          for distribution in dist/*; do
+            gh release verify-asset "$RELEASE_TAG" "$distribution" \
+              --repo "$GITHUB_REPOSITORY"
+          done
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2

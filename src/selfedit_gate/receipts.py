@@ -41,11 +41,33 @@ def _directory_flags() -> int:
     return flags
 
 
+def _validate_receipt_directory(descriptor: int) -> None:
+    metadata = os.fstat(descriptor)
+    if not stat.S_ISDIR(metadata.st_mode):
+        raise GateError("E_AUDIT_PATH", "receipt parent is not a directory")
+    if metadata.st_uid != os.geteuid():
+        raise GateError("E_AUDIT_OWNER", "receipt parent is not owned by this user")
+    if stat.S_IMODE(metadata.st_mode) & 0o022:
+        raise GateError("E_AUDIT_MODE", "receipt parent is group/world writable")
+
+
+def _validate_receipt_file(metadata: os.stat_result) -> None:
+    if not stat.S_ISREG(metadata.st_mode):
+        raise GateError("E_AUDIT_PATH", "receipt_log is not a regular file")
+    if metadata.st_nlink != 1:
+        raise GateError("E_AUDIT_LINK", "receipt_log must not have hard links")
+    if metadata.st_uid != os.geteuid():
+        raise GateError("E_AUDIT_OWNER", "receipt_log is not owned by this user")
+    if stat.S_IMODE(metadata.st_mode) & 0o022:
+        raise GateError("E_AUDIT_MODE", "receipt_log is group/world writable")
+
+
 def _open_receipt_parent(policy: Policy, *, create: bool) -> int:
     relative = policy.receipt_log.relative_to(policy.root)
     descriptor: int | None = None
     try:
         descriptor = os.open(policy.root, _directory_flags())
+        _validate_receipt_directory(descriptor)
         for part in relative.parent.parts:
             if part == ".":
                 continue
@@ -57,6 +79,7 @@ def _open_receipt_parent(policy: Policy, *, create: bool) -> int:
                 os.mkdir(part, mode=0o700, dir_fd=descriptor)
                 os.fsync(descriptor)
                 next_descriptor = os.open(part, _directory_flags(), dir_fd=descriptor)
+            _validate_receipt_directory(next_descriptor)
             os.close(descriptor)
             descriptor = next_descriptor
         return descriptor
@@ -107,10 +130,13 @@ def _validate_fields(record: dict[str, Any], line_number: int) -> None:
         "changed_bytes",
     }
     phase = record.get("phase")
+    if not isinstance(phase, str) or phase not in {"intent", "commit"}:
+        raise GateError("E_RECEIPT_FIELDS", f"receipt line {line_number} has wrong phase")
     expected = common | ({"after_sha256"} if phase == "commit" else set())
-    if phase not in {"intent", "commit"} or set(record) != expected:
+    if set(record) != expected:
         raise GateError("E_RECEIPT_FIELDS", f"receipt line {line_number} has wrong fields")
-    if record.get("action") not in {"write", "replace"}:
+    action = record.get("action")
+    if not isinstance(action, str) or action not in {"write", "replace"}:
         raise GateError("E_RECEIPT_FIELDS", f"receipt line {line_number} has wrong action")
     if not isinstance(record.get("path"), str) or not record["path"]:
         raise GateError("E_RECEIPT_FIELDS", f"receipt line {line_number} has wrong path")
@@ -169,9 +195,11 @@ def parse_records(raw: bytes) -> list[dict[str, Any]]:
             raise GateError("E_AUDIT_JSON", f"invalid receipt line {sequence}: {exc}") from exc
         if not isinstance(record, dict):
             raise GateError("E_AUDIT_JSON", f"receipt line {sequence} is not an object")
-        if record.get("schema_version") != RECEIPT_SCHEMA_VERSION:
+        schema_version = record.get("schema_version")
+        if type(schema_version) is not int or schema_version != RECEIPT_SCHEMA_VERSION:
             raise GateError("E_AUDIT_VERSION", f"receipt line {sequence} has unknown schema")
-        if record.get("sequence") != sequence:
+        record_sequence = record.get("sequence")
+        if type(record_sequence) is not int or record_sequence != sequence:
             raise GateError("E_AUDIT_SEQUENCE", f"receipt line {sequence} has wrong sequence")
         _validate_fields(record, sequence)
         if record.get("previous_record_sha256") != previous:
@@ -194,40 +222,35 @@ class ReceiptJournal:
 
     def __enter__(self) -> ReceiptJournal:
         parent_fd = _open_receipt_parent(self.policy, create=True)
-        flags = os.O_RDWR | os.O_APPEND | os.O_CREAT
+        flags = os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_NONBLOCK
         if hasattr(os, "O_NOFOLLOW"):
             flags |= os.O_NOFOLLOW
+        descriptor: int | None = None
+        stream: BinaryIO | None = None
         try:
             descriptor = os.open(self.policy.receipt_log.name, flags, 0o600, dir_fd=parent_fd)
             os.fsync(parent_fd)
-            os.close(parent_fd)
             stream = os.fdopen(descriptor, "r+b", buffering=0)
-            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+            descriptor = None
             metadata = os.fstat(stream.fileno())
-            if not stat.S_ISREG(metadata.st_mode):
-                raise GateError("E_AUDIT_PATH", "receipt_log is not a regular file")
-            if metadata.st_uid != os.geteuid():
-                raise GateError("E_AUDIT_OWNER", "receipt_log is not owned by this user")
-            if stat.S_IMODE(metadata.st_mode) & 0o022:
-                raise GateError("E_AUDIT_MODE", "receipt_log is group/world writable")
+            _validate_receipt_file(metadata)
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
             stream.seek(0)
             self.records = parse_records(stream.read(MAX_JOURNAL_BYTES + 1))
             self._stream = stream
             return self
         except GateError:
-            try:
-                os.close(parent_fd)
-            except OSError:
-                pass
-            if "stream" in locals():
+            if stream is not None:
                 stream.close()
             raise
         except OSError as exc:
-            try:
-                os.close(parent_fd)
-            except OSError:
-                pass
+            if stream is not None:
+                stream.close()
             raise GateError("E_AUDIT_OPEN", f"cannot open receipt journal: {exc}") from exc
+        finally:
+            os.close(parent_fd)
+            if descriptor is not None:
+                os.close(descriptor)
 
     def __exit__(self, *_: object) -> None:
         if self._stream is not None:
@@ -260,7 +283,7 @@ class ReceiptJournal:
 def read_records(policy: Policy) -> list[dict[str, Any]]:
     """Read receipts under a shared advisory lock."""
 
-    flags = os.O_RDONLY
+    flags = os.O_RDONLY | os.O_NONBLOCK
     if hasattr(os, "O_NOFOLLOW"):
         flags |= os.O_NOFOLLOW
     try:
@@ -270,14 +293,9 @@ def read_records(policy: Policy) -> list[dict[str, Any]]:
         finally:
             os.close(parent_fd)
         with os.fdopen(descriptor, "rb") as stream:
-            fcntl.flock(stream.fileno(), fcntl.LOCK_SH)
             metadata = os.fstat(stream.fileno())
-            if not stat.S_ISREG(metadata.st_mode):
-                raise GateError("E_AUDIT_PATH", "receipt_log is not a regular file")
-            if metadata.st_uid != os.geteuid():
-                raise GateError("E_AUDIT_OWNER", "receipt_log is not owned by this user")
-            if stat.S_IMODE(metadata.st_mode) & 0o022:
-                raise GateError("E_AUDIT_MODE", "receipt_log is group/world writable")
+            _validate_receipt_file(metadata)
+            fcntl.flock(stream.fileno(), fcntl.LOCK_SH)
             return parse_records(stream.read(MAX_JOURNAL_BYTES + 1))
     except GateError:
         raise

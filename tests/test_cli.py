@@ -106,8 +106,22 @@ def test_direct_cli_stdin_and_input_failures(
     assert json.loads(capsys.readouterr().out)["error"]["code"] == "E_INPUT_SIZE"
 
 
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="FIFOs unavailable")
+def test_cli_refuses_fifo_input(
+    repository: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    write_policy(repository)
+    fifo = repository / "content.fifo"
+    os.mkfifo(fifo)
+    monkeypatch.chdir(repository)
+    assert main(["--json", "write", "agents/reviewer.md", str(fifo)]) == 2
+    assert json.loads(capsys.readouterr().out)["error"]["code"] == "E_INPUT_TYPE"
+
+
 def test_version(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as captured:
         main(["--version"])
     assert captured.value.code == 0
-    assert capsys.readouterr().out.strip() == "selfedit-gate 0.1.0"
+    assert capsys.readouterr().out.strip() == "selfedit-gate 0.1.1"

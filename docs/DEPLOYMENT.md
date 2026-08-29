@@ -17,6 +17,7 @@ branch protection. In a workflow whose definition cannot be changed by the
 agent, install a pinned release and run:
 
 ```bash
+python -m pip install "agent-self-edit-gate==0.1.1"
 selfedit-gate --policy selfedit-policy.toml verify-receipts
 ```
 
@@ -30,6 +31,10 @@ Expose a narrow broker account/process that owns only those files and accepts
 the four CLI operations. Keep policy, journal, broker binary, and socket
 configuration owned by another account. Deny the agent `sudo`, alternate
 mounts, Git index tricks, and direct broker-account credentials.
+
+Accept proposed content as bounded stdin or broker-protocol bytes. Do not let an
+untrusted caller choose arbitrary host paths for the broker to read; file-path
+arguments inherit the broker account's read authority.
 
 ## Claude Code
 

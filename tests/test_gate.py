@@ -9,7 +9,7 @@ import pytest
 from selfedit_gate.errors import GateError
 from selfedit_gate.gate import exact_replace, guarded_write, verify_receipts
 from selfedit_gate.policy import Policy, load_policy
-from selfedit_gate.receipts import ReceiptJournal, parse_records
+from selfedit_gate.receipts import ReceiptJournal, _record_hash, parse_records
 
 from .conftest import write_policy
 
@@ -56,6 +56,13 @@ def test_create_policy(policy: Policy, repository: Path) -> None:
     creation_policy = load_policy(write_policy(repository, allow_create=True))
     guarded_write(creation_policy, "agents/new.md", b"new\n", action="write")
     assert (repository / "agents/new.md").stat().st_mode & 0o777 == 0o600
+
+
+def test_create_supports_long_valid_filename(repository: Path) -> None:
+    creation_policy = load_policy(write_policy(repository, allow_create=True))
+    filename = f"{'a' * 240}.md"
+    guarded_write(creation_policy, f"agents/{filename}", b"new\n", action="write")
+    assert (repository / "agents" / filename).read_bytes() == b"new\n"
 
 
 @pytest.mark.parametrize(
@@ -109,6 +116,69 @@ def test_audit_failure_occurs_before_target_write(repository: Path) -> None:
         == "E_AUDIT_PATH"
     )
     assert (repository / "agents/reviewer.md").read_bytes() == original
+
+
+def test_unsafe_receipt_parent_fails_before_target_write(repository: Path) -> None:
+    receipt_parent = repository / ".selfedit-gate"
+    receipt_parent.mkdir()
+    receipt_parent.chmod(0o777)
+    policy = load_policy(write_policy(repository))
+    original = (repository / "agents/reviewer.md").read_bytes()
+    assert (
+        error_code(lambda: guarded_write(policy, "agents/reviewer.md", b"new\n", action="write"))
+        == "E_AUDIT_MODE"
+    )
+    assert (repository / "agents/reviewer.md").read_bytes() == original
+
+
+def test_unsafe_root_receipt_parent_fails_before_target_write(repository: Path) -> None:
+    policy = load_policy(write_policy(repository, receipt_log="receipts.jsonl"))
+    original_mode = repository.stat().st_mode & 0o777
+    repository.chmod(0o777)
+    try:
+        original = (repository / "agents/reviewer.md").read_bytes()
+        assert (
+            error_code(
+                lambda: guarded_write(policy, "agents/reviewer.md", b"new\n", action="write")
+            )
+            == "E_AUDIT_MODE"
+        )
+        assert (repository / "agents/reviewer.md").read_bytes() == original
+    finally:
+        repository.chmod(original_mode)
+
+
+def test_hard_linked_receipt_fails_before_target_write(repository: Path) -> None:
+    receipt_parent = repository / ".selfedit-gate"
+    receipt_parent.mkdir()
+    outside = repository.parent / f"{repository.name}-outside-receipts.jsonl"
+    outside.write_bytes(b"")
+    os.link(outside, receipt_parent / "receipts.jsonl")
+    policy = load_policy(write_policy(repository))
+    original = (repository / "agents/reviewer.md").read_bytes()
+    assert (
+        error_code(lambda: guarded_write(policy, "agents/reviewer.md", b"new\n", action="write"))
+        == "E_AUDIT_LINK"
+    )
+    assert outside.read_bytes() == b""
+    assert (repository / "agents/reviewer.md").read_bytes() == original
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="FIFOs unavailable")
+def test_fifo_target_and_receipt_are_refused(repository: Path) -> None:
+    policy = load_policy(write_policy(repository))
+    os.mkfifo(repository / "agents/pipe.md")
+    assert (
+        error_code(lambda: guarded_write(policy, "agents/pipe.md", b"new\n", action="write"))
+        == "E_TARGET_TYPE"
+    )
+
+    receipt_parent = repository / ".selfedit-gate"
+    receipt_parent.mkdir(exist_ok=True)
+    receipt_path = receipt_parent / "receipts.jsonl"
+    receipt_path.unlink()
+    os.mkfifo(receipt_path)
+    assert error_code(lambda: verify_receipts(policy)) == "E_AUDIT_PATH"
 
 
 def test_interrupted_atomic_write_keeps_original_and_leaves_intent(
@@ -192,6 +262,34 @@ def test_commit_receipt_failure_is_detectable(
     assert error_code(lambda: verify_receipts(policy)) == "E_DANGLING_INTENT"
 
 
+def test_ownership_restore_failure_keeps_target_unchanged(
+    policy: Policy, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse_owner_restore(*_: object) -> None:
+        raise PermissionError("simulated ownership failure")
+
+    monkeypatch.setattr(os, "fchown", refuse_owner_restore)
+    target = policy.root / "agents/reviewer.md"
+    original = target.read_bytes()
+    assert (
+        error_code(lambda: guarded_write(policy, "agents/reviewer.md", b"new\n", action="write"))
+        == "E_ATOMIC_WRITE"
+    )
+    assert target.read_bytes() == original
+    assert list(target.parent.glob(".selfedit-*")) == []
+
+
+def test_invalid_python_api_action_fails_before_audit_or_write(policy: Policy) -> None:
+    target = policy.root / "agents/reviewer.md"
+    original = target.read_bytes()
+    assert (
+        error_code(lambda: guarded_write(policy, "agents/reviewer.md", b"new\n", action="rewrite"))
+        == "E_ACTION"
+    )
+    assert target.read_bytes() == original
+    assert not policy.receipt_log.exists()
+
+
 def test_manual_dangling_intent_is_rejected(policy: Policy) -> None:
     with ReceiptJournal(policy) as journal:
         journal.append(
@@ -265,3 +363,38 @@ def test_receipt_schema_rejects_duplicate_and_invalid_fields(policy: Policy) -> 
     record["operation_id"] = "short"
     policy.receipt_log.write_text(json.dumps(record) + "\n")
     assert error_code(lambda: verify_receipts(policy)) == "E_RECEIPT_FIELDS"
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid_value", "expected"),
+    [
+        ("schema_version", True, "E_AUDIT_VERSION"),
+        ("sequence", True, "E_AUDIT_SEQUENCE"),
+        ("phase", ["intent"], "E_RECEIPT_FIELDS"),
+        ("action", ["write"], "E_RECEIPT_FIELDS"),
+    ],
+)
+def test_receipt_schema_requires_exact_scalar_types(
+    policy: Policy, field: str, invalid_value: object, expected: str
+) -> None:
+    with ReceiptJournal(policy) as journal:
+        record = journal.append(
+            {
+                "operation_id": "f" * 32,
+                "phase": "intent",
+                "action": "write",
+                "path": "agents/reviewer.md",
+                "zone": "behaviour",
+                "policy_sha256": policy.sha256,
+                "before_sha256": "0" * 64,
+                "proposed_after_sha256": "1" * 64,
+                "content_bytes": 1,
+                "changed_bytes": 1,
+            }
+        )
+    record[field] = invalid_value
+    record["record_sha256"] = _record_hash(record)
+    policy.receipt_log.write_text(
+        json.dumps(record, ensure_ascii=True, separators=(",", ":"), sort_keys=True) + "\n"
+    )
+    assert error_code(lambda: verify_receipts(policy)) == expected

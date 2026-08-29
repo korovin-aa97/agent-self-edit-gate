@@ -1,7 +1,8 @@
 # Policy reference (schema v1)
 
-Policies are TOML files with `schema_version = 1`, one `[gate]` table, and one
-or more `[[zones]]` tables. Unknown keys and invalid values fail closed.
+Policies are TOML files with the integer `schema_version = 1`, one `[gate]`
+table, and one or more `[[zones]]` tables. Booleans and floats are not schema
+integers. Unknown keys and invalid values fail closed.
 
 ```toml
 schema_version = 1
@@ -25,7 +26,7 @@ extensions = [".md"]
 | Field | Meaning |
 | --- | --- |
 | `root` | repository root, relative to the policy file unless absolute |
-| `receipt_log` | append-only JSONL path; it must remain below `root` |
+| `receipt_log` | append-only JSONL file path; it must name a file below `root` |
 | `max_bytes` | maximum old and new file size |
 | `max_changed_bytes` | removed bytes plus added bytes outside the common prefix/suffix |
 | `allow_create` | whether a matching mutable path may be created; default is `false` |
@@ -33,6 +34,11 @@ extensions = [".md"]
 All byte limits are positive integers. New parent directories are never created
 for targets. A newly created target starts with mode `0600`; replacement keeps
 the existing file mode and ownership.
+
+Receipt subdirectories are created with mode `0700`. Existing receipt
+subdirectories and the journal must be owned by the gateway user and must not
+be group/world writable. The journal must be a regular file with exactly one
+hard link.
 
 ## Zones and precedence
 

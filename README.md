@@ -10,6 +10,7 @@ prompts and skills without rewriting permissions, hooks, or enforcement.**
 > [threat model](docs/THREAT_MODEL.md) before deployment.
 
 [![CI](https://github.com/korovin-aa97/agent-self-edit-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/korovin-aa97/agent-self-edit-gate/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/agent-self-edit-gate.svg)](https://pypi.org/project/agent-self-edit-gate/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)](https://www.python.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
@@ -30,24 +31,21 @@ two-phase, hash-chained receipt.
 ## 15-second demo
 
 ```bash
-git clone --branch v0.1.0 https://github.com/korovin-aa97/agent-self-edit-gate.git
+python -m pip install "agent-self-edit-gate==0.1.1"
+git clone --depth 1 --branch v0.1.1 \
+  https://github.com/korovin-aa97/agent-self-edit-gate.git
 cd agent-self-edit-gate
-python -m pip install .
-cp selfedit-policy.example.toml selfedit-policy.toml
-
-selfedit-gate check .claude/agents/reviewer.md
-# mutable: .claude/agents/reviewer.md (behaviour)
-
-selfedit-gate check .claude/settings.json
-# selfedit-gate: E_ZONE_DENIED: ... is immutable by zone authority
+bash examples/demo.sh
 ```
 
-PyPI publication follows once trusted publishing is activated. Until then,
-install the GitHub release wheel or directly from the tagged source:
+The demo performs an allowed exact edit, verifies its two receipts, and proves
+that a protected `.github/workflows` path is denied.
+
+Install from PyPI for normal use:
 
 ```bash
-python -m pip install \
-  "agent-self-edit-gate @ git+https://github.com/korovin-aa97/agent-self-edit-gate@v0.1.0"
+python -m pip install "agent-self-edit-gate==0.1.1"
+selfedit-gate --version
 ```
 
 ## Quickstart
@@ -55,29 +53,35 @@ python -m pip install \
 Agent Self-Edit Gate supports Python 3.12+ on Linux and macOS.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-git clone --branch v0.1.0 https://github.com/korovin-aa97/agent-self-edit-gate.git
-cd agent-self-edit-gate
-python -m pip install .
-cp profiles/generic.toml selfedit-policy.toml
-selfedit-gate --policy selfedit-policy.toml check AGENTS.md
+evaluation_root=$(mktemp -d)
+mkdir -p "$evaluation_root/.agents"
+cp profiles/generic.toml "$evaluation_root/selfedit-policy.toml"
+printf '%s\n' 'Review code carefully.' > "$evaluation_root/.agents/reviewer.md"
+cd "$evaluation_root"
+
+selfedit-gate --policy selfedit-policy.toml check .agents/reviewer.md
 ```
 
-For an exact edit, put the one expected old fragment and replacement in files:
+`root = "."` is relative to the policy file, so copy a reviewed profile into the
+repository root instead of using it in place from the cloned `profiles/`
+directory. For an exact edit, put the one expected old fragment and replacement
+in regular files:
 
 ```bash
-printf '%s\n' 'Run tests before handoff.' > old.txt
-printf '%s\n' 'Run lint, types, and tests before handoff.' > new.txt
-selfedit-gate --policy selfedit-policy.toml replace AGENTS.md old.txt new.txt
+printf '%s\n' 'Review code carefully.' > old.txt
+printf '%s\n' 'Review code and cite evidence.' > new.txt
+selfedit-gate --policy selfedit-policy.toml replace .agents/reviewer.md old.txt new.txt
 selfedit-gate --policy selfedit-policy.toml verify-receipts
 ```
 
 For a bounded whole-file update:
 
 ```bash
-selfedit-gate --policy selfedit-policy.toml write AGENTS.md proposed-AGENTS.md
-cat proposed-AGENTS.md | selfedit-gate --policy selfedit-policy.toml write AGENTS.md -
+printf '%s\n' 'Review code, tests, and docs.' > proposed-reviewer.md
+selfedit-gate --policy selfedit-policy.toml write \
+  .agents/reviewer.md proposed-reviewer.md
+printf '%s\n' 'Review all evidence.' | \
+  selfedit-gate --policy selfedit-policy.toml write .agents/reviewer.md -
 ```
 
 Add `--json` before the command for machine-readable success or stable error

@@ -26,7 +26,7 @@ class FileState:
 
 
 def _open_parent(policy: Policy, target: Target) -> int:
-    flags = os.O_RDONLY
+    flags = os.O_RDONLY | os.O_NONBLOCK
     if hasattr(os, "O_DIRECTORY"):
         flags |= os.O_DIRECTORY
     if hasattr(os, "O_NOFOLLOW"):
@@ -48,7 +48,7 @@ def _open_parent(policy: Policy, target: Target) -> int:
 
 
 def _read_state(parent_fd: int, name: str, max_bytes: int) -> FileState:
-    flags = os.O_RDONLY
+    flags = os.O_RDONLY | os.O_NONBLOCK
     if hasattr(os, "O_NOFOLLOW"):
         flags |= os.O_NOFOLLOW
     try:
@@ -115,7 +115,7 @@ def _validate_content(policy: Policy, state: FileState, content: bytes) -> int:
 
 
 def _assert_same_state(parent_fd: int, name: str, expected: FileState) -> None:
-    flags = os.O_RDONLY
+    flags = os.O_RDONLY | os.O_NONBLOCK
     if hasattr(os, "O_NOFOLLOW"):
         flags |= os.O_NOFOLLOW
     try:
@@ -154,7 +154,7 @@ def _assert_same_state(parent_fd: int, name: str, expected: FileState) -> None:
 
 def _atomic_replace(parent_fd: int, name: str, expected: FileState, content: bytes) -> None:
     _assert_same_state(parent_fd, name, expected)
-    temp_name = f".{name}.selfedit-{secrets.token_hex(8)}"
+    temp_name = f".selfedit-{secrets.token_hex(16)}"
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
     if hasattr(os, "O_NOFOLLOW"):
         flags |= os.O_NOFOLLOW
@@ -167,10 +167,7 @@ def _atomic_replace(parent_fd: int, name: str, expected: FileState, content: byt
             stream.flush()
             os.fsync(stream.fileno())
             if expected.exists and expected.uid is not None and expected.gid is not None:
-                try:
-                    os.fchown(stream.fileno(), expected.uid, expected.gid)
-                except PermissionError:
-                    pass
+                os.fchown(stream.fileno(), expected.uid, expected.gid)
             os.fchmod(stream.fileno(), expected.mode)
         _assert_same_state(parent_fd, name, expected)
         os.replace(temp_name, name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
@@ -211,6 +208,8 @@ def guarded_write(
     action: str,
     expected_before_sha256: str | None = None,
 ) -> dict[str, Any]:
+    if not isinstance(action, str) or action not in {"write", "replace"}:
+        raise GateError("E_ACTION", f"unsupported action: {action!r}")
     target = resolve_target(policy, raw_target)
     parent_fd = _open_parent(policy, target)
     try:

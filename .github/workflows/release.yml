@@ -1,10 +1,12 @@
 name: Release artifacts
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*.*.*"
 
 permissions:
+  checks: read
   contents: write
   id-token: write
   attestations: write
@@ -13,13 +15,89 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v7
-      - run: uv build
-      - uses: actions/attest-build-provenance@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          subject-path: "dist/*"
-      - name: Upload artifacts to existing GitHub Release
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      - name: Validate tag, version, notes, main ancestry, and required checks
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" dist/* --clobber
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          git show-ref --verify --quiet "refs/tags/${RELEASE_TAG}"
+          tagged_commit=$(git rev-list -n 1 "$RELEASE_TAG")
+          test "$tagged_commit" = "$(git rev-parse HEAD)"
+          package_version=$(uv run python -c \
+            'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          test "$RELEASE_TAG" = "v${package_version}"
+          test -f "docs/RELEASE_NOTES_${RELEASE_TAG}.md"
+          git fetch origin main
+          git merge-base --is-ancestor "$tagged_commit" origin/main
+          check_runs=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/commits/${tagged_commit}/check-runs?per_page=100")
+          while IFS= read -r required_check; do
+            jq -e --arg name "$required_check" \
+              '[.check_runs[] | select(.name == $name and .conclusion == "success")] | length > 0' \
+              <<<"$check_runs"
+          done <<'CHECKS'
+          quality
+          package
+          test (ubuntu-latest, 3.12)
+          test (ubuntu-latest, 3.13)
+          test (ubuntu-latest, 3.14)
+          test (macos-latest, 3.12)
+          test (macos-latest, 3.13)
+          test (macos-latest, 3.14)
+          analyze
+          CHECKS
+      - run: uv sync --all-groups --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy src tests
+      - run: uv run pytest
+      - run: uv run bash examples/demo.sh
+      - run: uv build
+      - run: uvx --from twine==7.0.0 twine check dist/*.whl dist/*.tar.gz
+      - name: Install both distributions and write checksums
+        run: |
+          wheel_environment=$(mktemp -d)
+          sdist_environment=$(mktemp -d)
+          uv venv "$wheel_environment"
+          uv venv "$sdist_environment"
+          uv pip install --python "$wheel_environment/bin/python" --no-deps dist/*.whl
+          uv pip install --python "$sdist_environment/bin/python" --no-deps dist/*.tar.gz
+          "$wheel_environment/bin/selfedit-gate" --version
+          "$sdist_environment/bin/selfedit-gate" --version
+          (cd dist && sha256sum ./*.whl ./*.tar.gz > SHA256SUMS)
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-path: "dist/*"
+      - name: Create draft, attach assets, then publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if release_json=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" 2>/dev/null); then
+            release_state=$(jq -r '[.draft, .prerelease, .immutable] | join(" ")' \
+              <<<"$release_json")
+            if test "$release_state" = "false false true"; then
+              gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"
+              for distribution in dist/*; do
+                gh release verify-asset "$RELEASE_TAG" "$distribution" \
+                  --repo "$GITHUB_REPOSITORY"
+              done
+              exit 0
+            fi
+            test "$release_state" = "true false false"
+          else
+            gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --draft \
+              --verify-tag \
+              --title "Agent Self-Edit Gate ${RELEASE_TAG}" \
+              --notes-file "docs/RELEASE_NOTES_${RELEASE_TAG}.md"
+          fi
+          gh release upload "$RELEASE_TAG" dist/* --clobber --repo "$GITHUB_REPOSITORY"
+          gh release edit "$RELEASE_TAG" --draft=false --latest \
+            --repo "$GITHUB_REPOSITORY"

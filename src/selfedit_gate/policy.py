@@ -115,7 +115,8 @@ def load_policy(path: Path) -> Policy:
         data = tomllib.loads(raw.decode("utf-8"))
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
         raise GateError("E_POLICY_READ", f"cannot load policy: {exc}") from exc
-    if data.get("schema_version") != POLICY_SCHEMA_VERSION:
+    schema_version = data.get("schema_version")
+    if type(schema_version) is not int or schema_version != POLICY_SCHEMA_VERSION:
         raise GateError(
             "E_POLICY_VERSION",
             f"policy schema_version must be {POLICY_SCHEMA_VERSION}",
@@ -153,9 +154,11 @@ def load_policy(path: Path) -> Policy:
     receipt_candidate = Path(receipt_value)
     receipt_log = receipt_candidate if receipt_candidate.is_absolute() else root / receipt_candidate
     try:
-        receipt_log.relative_to(root)
+        receipt_relative = receipt_log.relative_to(root)
     except ValueError as exc:
         raise GateError("E_POLICY_RECEIPTS", "receipt_log must be below policy root") from exc
+    if not receipt_relative.parts:
+        raise GateError("E_POLICY_RECEIPTS", "receipt_log must name a file below policy root")
     if ".." in receipt_candidate.parts:
         raise GateError("E_POLICY_RECEIPTS", "receipt_log may not contain '..'")
     allow_create = gate.get("allow_create", False)
@@ -179,7 +182,7 @@ def load_policy(path: Path) -> Policy:
         extensions = raw_zone.get("extensions", [])
         if not isinstance(name, str) or not name or name in names:
             raise GateError("E_POLICY_ZONES", "zone names must be unique non-empty strings")
-        if mode not in _MODES:
+        if not isinstance(mode, str) or mode not in _MODES:
             raise GateError("E_POLICY_ZONES", f"zone {name!r} has invalid mode {mode!r}")
         if (
             not isinstance(patterns, list)

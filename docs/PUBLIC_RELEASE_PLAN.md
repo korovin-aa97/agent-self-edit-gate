@@ -1,6 +1,6 @@
 # Agent Self-Edit Gate — Public Release Plan
 
-Status: v0.1.0 release execution record. Target: an honest public alpha release.
+Status: v0.1.1 post-release audit record. Target: an honest public alpha release.
 Unchecked items require owner/account action or post-release operation.
 
 ## Release thesis
@@ -82,8 +82,8 @@ depends on the agent's own unrestricted testimony.
 - [x] Add `docs/POLICY_REFERENCE.md`, `docs/RECEIPTS.md`, and deployment recipes.
 - [x] Add `llms.txt` and an agent skill showing the safe edit workflow if useful.
 - [x] Add CI for lint, type checking, tests, packaging, and hostile fixtures.
-- [x] Add an OIDC-only PyPI publishing workflow; never store a long-lived token.
-      The owner still needs to register the trusted publisher in PyPI.
+- [x] Add an OIDC-only PyPI publishing workflow and register the trusted
+      publisher; never store a long-lived token.
 - [x] Generate a 1280x640 social preview and a deterministic terminal demo.
 - [x] Configure GitHub description/topics with `ai-agents`, `coding-agents`,
       `policy-as-code`, `agent-security`, `claude-code`, `codex`, `python`, and
@@ -107,7 +107,7 @@ depends on the agent's own unrestricted testimony.
 
 Do not execute this phase without an explicit owner instruction.
 
-1. [ ] In PyPI, register the trusted publisher for owner `korovin-aa97`,
+1. [x] In PyPI, register the trusted publisher for owner `korovin-aa97`,
        repository `agent-self-edit-gate`, workflow `publish-pypi.yml`, and
        environment `pypi`.
 2. [x] Change GitHub visibility to public.
@@ -122,10 +122,21 @@ Do not execute this phase without an explicit owner instruction.
 8. [x] Create a GitHub Release with human notes, demo, limitations, and roadmap.
 9. [x] Verify GitHub release checksums and provenance, then install the release
        wheel in a clean environment.
-10. [ ] After the trusted publisher is registered, publish to PyPI and verify a
+10. [x] After the trusted publisher is registered, publish to PyPI and verify a
         clean install from PyPI.
 11. [ ] Submit to appropriate agent-security and developer-tool awesome lists;
        do not submit to MCP directories unless the product actually ships MCP.
+
+## v0.1.1 post-release audit
+
+- [x] Reproduce every README quickstart command in a clean checkout.
+- [x] Install the PyPI wheel and source distribution on Python 3.12 and the
+      wheel on Python 3.14.
+- [x] Match PyPI and GitHub Release digests and verify both provenance records.
+- [x] Add regressions for strict schema types, unsafe receipt parents, receipt
+      hard links, FIFOs, long filenames, and ownership restoration failure.
+- [x] Pin workflow actions to immutable SHAs and change release automation to
+      draft-assets-publish ordering required by immutable releases.
 
 ## Phase 6 — Launch content, days 2–14
 

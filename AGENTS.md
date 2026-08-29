@@ -1,6 +1,6 @@
 # Agent Self-Edit Gate — Agent Bootstrap
 
-Last updated: 2026-08-29. Repository status: **public v0.1.0 release**.
+Last updated: 2026-08-30. Repository status: **public v0.1.1 release**.
 
 Read this file first, then `README.md`, `selfedit-policy.example.toml`, the
 current source, and `docs/PUBLIC_RELEASE_PLAN.md` before changing anything.
@@ -23,7 +23,7 @@ already occupied and implies protections this tool cannot provide.
 
 ## Current state
 
-- Version `0.1.0`, packaged under Apache-2.0.
+- Version `0.1.1`, packaged under Apache-2.0.
 - The CLI supports bounded checks, exact replacement, whole-file writes,
   atomic replacement, deterministic JSON errors, and receipt verification.
 - Policy and receipt schemas are versioned at v1.

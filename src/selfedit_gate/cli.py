@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import stat
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,7 +21,10 @@ def _bounded_read(path: Path, limit: int, *, label: str) -> bytes:
         if str(path) == "-":
             data = sys.stdin.buffer.read(limit + 1)
         else:
-            with path.open("rb") as stream:
+            descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+            with os.fdopen(descriptor, "rb") as stream:
+                if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                    raise GateError("E_INPUT_TYPE", f"{label} must be a regular file")
                 data = stream.read(limit + 1)
     except OSError as exc:
         raise GateError("E_INPUT_READ", f"cannot read {label}: {exc}") from exc

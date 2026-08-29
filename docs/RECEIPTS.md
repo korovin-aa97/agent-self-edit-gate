@@ -35,6 +35,12 @@ Keep the journal and policy protected from the agent. In CI, pin the package
 version, run the verifier from a protected workflow, and store the resulting
 head hash or artifact somewhere the agent cannot rewrite.
 
+The gateway refuses non-regular or hard-linked journals and any nested receipt
+directory that is not owned by the gateway user or is group/world writable.
+These checks prevent a writable audit directory or an outside hard link from
+redirecting append operations. They do not replace an independent receipt-head
+anchor or OS access control.
+
 ## Incomplete operations
 
 A dangling intent is always an error. It can mean a crash, forced termination,
