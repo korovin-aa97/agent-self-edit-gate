@@ -1,5 +1,9 @@
 # Agent Self-Edit Gate
 
+<p align="center">
+  <img src="docs/assets/social-preview.svg" alt="Agent Self-Edit Gate flow: a requested edit passes through a guarded write and produces a verifiable receipt." width="100%">
+</p>
+
 **Policy-enforced self-edit gateway for coding agents: let agents improve
 prompts and skills without rewriting permissions, hooks, or enforcement.**
 
@@ -123,16 +127,17 @@ See the complete [policy reference](docs/POLICY_REFERENCE.md) and ready-to-copy
 
 ## What happens on a write
 
-```mermaid
-flowchart TD
-    A["Requested\nedit"] --> B["Classify path\ndeny before allow"]
-    B --> C["Bound content\nand hash target"]
-    C --> D["fsync intent\nreceipt"]
-    D --> E["Recheck policy\nand target\nidentity"]
-    E --> F["Atomic replace\nand directory\nfsync"]
-    F --> G["fsync commit\nreceipt"]
-    G --> H["Independent\nverifier"]
-```
+The hero condenses the protocol to requested edit → guarded write → verifiable
+receipt. The complete order is:
+
+1. Receive the requested edit.
+2. Classify its path, with deny rules taking precedence.
+3. Bound the content and hash the current target.
+4. Persist and `fsync` an intent receipt.
+5. Recheck the policy and target identity.
+6. Atomically replace the target and `fsync` its directory.
+7. Persist and `fsync` a commit receipt.
+8. Verify the result independently.
 
 Every receipt names the exact policy, before bytes, proposed bytes, operation,
 and prior receipt hash. A crash between intent and commit leaves a dangling
