@@ -64,7 +64,7 @@ it cannot stop, and which deployment assumptions make the guarantee true.
 - [x] Add hostile cases: symlink file/parent, traversal, race, ambiguous anchor,
       binary/extension mismatch, oversized diff, audit directory failure,
       interrupted write, stale intent, policy swap, receipt truncation.
-- [ ] Test on Linux and macOS; either support Windows or mark it unsupported.
+- [x] Test on Linux and macOS; either support Windows or mark it unsupported.
 - [ ] Arrange threat-model review with at least one independent security-minded
       user or design partner and resolve blocking findings.
 
