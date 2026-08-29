@@ -82,7 +82,8 @@ depends on the agent's own unrestricted testimony.
 - [x] Add `docs/POLICY_REFERENCE.md`, `docs/RECEIPTS.md`, and deployment recipes.
 - [x] Add `llms.txt` and an agent skill showing the safe edit workflow if useful.
 - [x] Add CI for lint, type checking, tests, packaging, and hostile fixtures.
-- [ ] Add OIDC trusted publishing for PyPI; never store a long-lived token.
+- [x] Add an OIDC-only PyPI publishing workflow; never store a long-lived token.
+      The owner still needs to register the trusted publisher in PyPI.
 - [x] Generate a 1280x640 social preview and a deterministic terminal demo.
 - [x] Configure GitHub description/topics with `ai-agents`, `coding-agents`,
       `policy-as-code`, `agent-security`, `claude-code`, `codex`, `python`, and
@@ -106,18 +107,24 @@ depends on the agent's own unrestricted testimony.
 
 Do not execute this phase without an explicit owner instruction.
 
-1. [ ] Configure a pending PyPI trusted publisher for this repository and
-       `.github/workflows/release.yml`.
+1. [ ] In PyPI, register the trusted publisher for owner `korovin-aa97`,
+       repository `agent-self-edit-gate`, workflow `publish-pypi.yml`, and
+       environment `pypi`.
 2. [x] Change GitHub visibility to public.
 3. [x] Immediately confirm LICENSE, README/demo, description, topics, and clean
        history are visible.
 4. [x] Enable secret scanning, push protection, private vulnerability reporting,
        and CodeQL/default code scanning where available.
-5. [ ] Upload social preview and pin the repository on the owner profile.
-6. [ ] Tag `v0.1.0`; let CI publish through OIDC.
-7. [ ] Create a GitHub Release with human notes, demo, limitations, and roadmap.
-8. [ ] Verify provenance and install from PyPI in a clean environment.
-9. [ ] Submit to appropriate agent-security and developer-tool awesome lists;
+5. [x] Upload and visually verify the 1280x640 social preview.
+6. [ ] Pin the repository on the owner profile.
+7. [x] Tag `v0.1.0` and publish wheel, source distribution, checksums, and
+       GitHub artifact attestations.
+8. [x] Create a GitHub Release with human notes, demo, limitations, and roadmap.
+9. [x] Verify GitHub release checksums and provenance, then install the release
+       wheel in a clean environment.
+10. [ ] After the trusted publisher is registered, publish to PyPI and verify a
+        clean install from PyPI.
+11. [ ] Submit to appropriate agent-security and developer-tool awesome lists;
        do not submit to MCP directories unless the product actually ships MCP.
 
 ## Phase 6 — Launch content, days 2–14
