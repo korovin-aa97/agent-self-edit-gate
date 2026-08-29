@@ -115,24 +115,41 @@ def _validate_content(policy: Policy, state: FileState, content: bytes) -> int:
 
 
 def _assert_same_state(parent_fd: int, name: str, expected: FileState) -> None:
+    flags = os.O_RDONLY
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
     try:
-        metadata = os.stat(name, dir_fd=parent_fd, follow_symlinks=False)
+        descriptor = os.open(name, flags, dir_fd=parent_fd)
     except FileNotFoundError as exc:
         if expected.exists:
             raise GateError("E_TARGET_RACE", "target disappeared during the operation") from exc
         return
     except OSError as exc:
         raise GateError("E_TARGET_RACE", f"cannot re-check target: {exc}") from exc
-    if stat.S_ISLNK(metadata.st_mode) or not stat.S_ISREG(metadata.st_mode):
-        raise GateError("E_TARGET_RACE", "target type changed during the operation")
     if not expected.exists:
+        os.close(descriptor)
         raise GateError("E_TARGET_RACE", "target appeared during the operation")
-    if (metadata.st_dev, metadata.st_ino, metadata.st_uid) != (
-        expected.device,
-        expected.inode,
-        expected.uid,
-    ):
-        raise GateError("E_TARGET_RACE", "target identity changed during the operation")
+    with os.fdopen(descriptor, "rb") as stream:
+        metadata = os.fstat(stream.fileno())
+        content = stream.read(len(expected.content) + 1)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise GateError("E_TARGET_RACE", "target type changed during the operation")
+        identity = (
+            metadata.st_dev,
+            metadata.st_ino,
+            metadata.st_uid,
+            metadata.st_gid,
+            stat.S_IMODE(metadata.st_mode),
+        )
+        expected_identity = (
+            expected.device,
+            expected.inode,
+            expected.uid,
+            expected.gid,
+            expected.mode,
+        )
+        if identity != expected_identity or content != expected.content:
+            raise GateError("E_TARGET_RACE", "target changed during the operation")
 
 
 def _atomic_replace(parent_fd: int, name: str, expected: FileState, content: bytes) -> None:
