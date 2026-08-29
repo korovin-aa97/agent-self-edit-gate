@@ -46,7 +46,7 @@ selfedit-gate = "selfedit_gate.cli:main"
 dev = [
   "build>=1.3,<2",
   "mypy>=1.17,<2",
-  "pytest>=8.4,<9",
+  "pytest>=8.4,<10",
   "pytest-cov>=6.2,<8",
   "ruff>=0.12,<1",
 ]
