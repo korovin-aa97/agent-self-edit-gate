@@ -37,8 +37,8 @@
     <text x="222" y="371" text-anchor="middle" fill="#f8fafc" font-size="38" font-weight="750">Requested edit</text>
     <text x="222" y="410" text-anchor="middle" fill="#8fa8c5" font-size="22">agent proposal</text>
 
-    <path d="M390 365 H462" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
-    <path d="M450 350 L469 365 L450 380" fill="none" stroke="#5eead4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M380 365 H478" fill="none" stroke="#2dd4bf" stroke-width="4" stroke-linecap="round"/>
+    <path d="M466 354 L480 365 L466 376" fill="none" stroke="#2dd4bf" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 
     <rect x="482" y="286" width="316" height="158" rx="22" fill="url(#panel)" stroke="#2d8190" stroke-width="2"/>
     <circle cx="522" cy="310" r="17" fill="#123f4c" stroke="#2dd4bf" stroke-width="2"/>
@@ -46,8 +46,8 @@
     <text x="640" y="371" text-anchor="middle" fill="#f8fafc" font-size="38" font-weight="750">Guarded write</text>
     <text x="640" y="410" text-anchor="middle" fill="#9bc5cf" font-size="22">policy + atomic replace</text>
 
-    <path d="M808 365 H880" stroke="url(#accent)" stroke-width="6" stroke-linecap="round"/>
-    <path d="M868 350 L887 365 L868 380" fill="none" stroke="#67e8f9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M798 365 H896" fill="none" stroke="#2dd4bf" stroke-width="4" stroke-linecap="round"/>
+    <path d="M884 354 L898 365 L884 376" fill="none" stroke="#2dd4bf" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 
     <rect x="900" y="286" width="316" height="158" rx="22" fill="url(#panel)" stroke="#2a7890" stroke-width="2"/>
     <circle cx="940" cy="310" r="17" fill="#123955" stroke="#67e8f9" stroke-width="2"/>
