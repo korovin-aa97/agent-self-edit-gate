@@ -124,4 +124,4 @@ def test_version(capsys: pytest.CaptureFixture[str]) -> None:
     with pytest.raises(SystemExit) as captured:
         main(["--version"])
     assert captured.value.code == 0
-    assert capsys.readouterr().out.strip() == "selfedit-gate 0.1.1"
+    assert capsys.readouterr().out.strip() == "selfedit-gate 0.1.2"

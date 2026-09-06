@@ -1,6 +1,6 @@
 # Threat model
 
-This document defines the security claim for Agent Self-Edit Gate v0.1.1. It is
+This document defines the security claim for Agent Self-Edit Gate v0.1.2. It is
 part of the product contract, not a marketing appendix.
 
 ## Security claim

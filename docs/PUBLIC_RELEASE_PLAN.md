@@ -1,6 +1,6 @@
 # Agent Self-Edit Gate — Public Release Plan
 
-Status: v0.1.1 post-release audit record. Target: an honest public alpha release.
+Status: v0.1.2 security-documentation patch. Target: an honest public alpha release.
 Unchecked items require owner/account action or post-release operation.
 
 ## Release thesis
@@ -137,6 +137,15 @@ Do not execute this phase without an explicit owner instruction.
       hard links, FIFOs, long filenames, and ownership restoration failure.
 - [x] Pin workflow actions to immutable SHAs and change release automation to
       draft-assets-publish ordering required by immutable releases.
+
+## v0.1.2 security-claim clarification
+
+- [x] State prominently that the CLI is not a sandbox and can be bypassed by an
+      agent with unrestricted write access.
+- [x] Require an externally anchored receipt head or journal outside the
+      agent's authority before protected CI is described as independent evidence.
+- [x] Add a structured evaluation-question path and reproducible public demo assets.
+- [x] Preserve policy schema v1, receipt schema v1, and all existing CLI behavior.
 
 ## Phase 6 — Launch content, days 2–14
 

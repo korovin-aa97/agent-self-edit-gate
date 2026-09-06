@@ -1,0 +1,11 @@
+{"env":{"SHELL":"sh","TERM":"xterm-256color"},"height":18,"timestamp":0,"title":"Agent Self-Edit Gate v0.1.2 \u2014 allowed, denied, verified","version":2,"width":96}
+[0.0,"o","\u001b[1;36mAgent Self-Edit Gate\u001b[0m  \u001b[2mreal v0.1.2 CLI output\u001b[0m\r\n\r\n"]
+[0.8,"o","\u001b[1;32m$\u001b[0m selfedit-gate check .agents/reviewer.md\r\n"]
+[1.8,"o","\u001b[37mmutable: .agents/reviewer.md (shared-agent-behaviour)\u001b[0m\r\n\r\n"]
+[3.6,"o","\u001b[1;32m$\u001b[0m selfedit-gate replace .agents/reviewer.md old.txt new.txt\r\n"]
+[4.8,"o","\u001b[37mupdated: .agents/reviewer.md (<operation-id>)\u001b[0m\r\n\r\n"]
+[6.8,"o","\u001b[1;32m$\u001b[0m selfedit-gate check .github/workflows/ci.yml\r\n"]
+[8.0,"o","\u001b[31mselfedit-gate: E_ZONE_DENIED: .github/workflows/ci.yml is protected by zone repository-authority\u001b[0m\r\n\r\n"]
+[10.4,"o","\u001b[1;32m$\u001b[0m selfedit-gate verify-receipts\r\n"]
+[11.6,"o","\u001b[37mvalid: 1 operations, 2 records\u001b[0m\r\n\r\n"]
+[14.2,"o","\u001b[1;36mALLOW behaviour  \u00b7  DENY authority  \u00b7  VERIFY receipts\u001b[0m\r\n"]

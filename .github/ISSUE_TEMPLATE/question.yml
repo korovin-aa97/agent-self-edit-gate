@@ -1,0 +1,41 @@
+name: Evaluation question or use case
+description: Ask about a writer boundary, report a successful run, or request an async design review
+title: "question: "
+body:
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: What would help?
+      options:
+        - Clarify whether the gate fits a workflow
+        - Report a successful evaluation or integration
+        - Request an async threat-model review
+        - Ask about policy or receipt behaviour
+    validations:
+      required: true
+  - type: dropdown
+    id: boundary
+    attributes:
+      label: External writer boundary
+      description: Which mechanism, if any, stops the agent from writing around the CLI?
+      options:
+        - Local evaluation only; no security boundary
+        - Protected CI and an externally anchored receipt history
+        - OS-isolated or separately privileged writer/broker
+        - Still designing the boundary
+    validations:
+      required: true
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow and question
+      description: Describe the agent, mutable behaviour files, protected authority files, and the question or result.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I have removed credentials, private code, customer data, and internal repository details.
+          required: true

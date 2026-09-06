@@ -13,16 +13,21 @@ editor writes.
 ## Protected CI evidence
 
 Protect the policy, `.github/workflows`, and receipt journal with CODEOWNERS and
-branch protection. In a workflow whose definition cannot be changed by the
-agent, install a pinned release and run:
+branch protection. Anchor the previously accepted journal head or journal bytes
+outside the agent's write authority, and reject pull requests that replace or
+truncate that history. In a workflow whose definition and pinned verifier cannot
+be changed by the agent, run:
 
 ```bash
-python -m pip install "agent-self-edit-gate==0.1.1"
+python -m pip install "agent-self-edit-gate==0.1.2"
 selfedit-gate --policy selfedit-policy.toml verify-receipts
 ```
 
 Also review the actual Git diff. Receipt verification complements review; it
-does not decide whether prompt content is safe.
+does not decide whether prompt content is safe. Running `verify-receipts` only
+against files supplied by an unrestricted agent is diagnostics, not independent
+evidence: that agent could forge a new internally consistent journal and matching
+files.
 
 ## Filesystem broker
 

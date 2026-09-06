@@ -5,6 +5,25 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-09-06
+
+### Changed
+
+- State prominently that the CLI is not a sandbox and that protected CI is an
+  independent boundary only when the agent cannot rewrite its checks or anchors.
+- Require an externally anchored receipt head or journal before receipt-chain
+  verification is treated as evidence rather than agent-controlled diagnostics.
+- Correct the README receipt description to distinguish recorded hashes from
+  embedded file bytes.
+- Exclude the internal launch kit from source distributions explicitly.
+
+### Added
+
+- Add a structured evaluation-question issue template for use cases, successful
+  evaluations, and asynchronous threat-model review requests.
+- Add a reproducible real-CLI terminal demo, launch cards, and asset-regeneration
+  instructions.
+
 ## [0.1.1] - 2026-08-30
 
 ### Fixed
@@ -40,6 +59,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Threat model, protocol references, deployment recipes, hostile tests, packaging,
   CI, security policy, and community files.
 
-[Unreleased]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/korovin-aa97/agent-self-edit-gate/releases/tag/v0.1.0

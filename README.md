@@ -8,10 +8,13 @@
 prompts and skills without rewriting permissions, hooks, or enforcement.**
 
 > [!IMPORTANT]
-> The CLI is an enforcement boundary only when a sandbox, OS policy, or
-> protected broker makes it the agent's only writer. With unrestricted shell or
-> filesystem access, an agent can bypass it. Read the
+> **This is not a sandbox.** The CLI is an enforcement boundary only when a
+> sandbox, OS policy, or protected broker makes it the agent's only writer. With
+> unrestricted shell or filesystem access, an agent can bypass it. Read the
 > [threat model](docs/THREAT_MODEL.md) before deployment.
+
+[Run the 15-second demo](#15-second-demo) ·
+[Read the threat model](docs/THREAT_MODEL.md)
 
 [![CI](https://github.com/korovin-aa97/agent-self-edit-gate/actions/workflows/ci.yml/badge.svg)](https://github.com/korovin-aa97/agent-self-edit-gate/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/agent-self-edit-gate.svg)](https://pypi.org/project/agent-self-edit-gate/)
@@ -35,8 +38,8 @@ two-phase, hash-chained receipt.
 ## 15-second demo
 
 ```bash
-python -m pip install "agent-self-edit-gate==0.1.1"
-git clone --depth 1 --branch v0.1.1 \
+python -m pip install "agent-self-edit-gate==0.1.2"
+git clone --depth 1 --branch v0.1.2 \
   https://github.com/korovin-aa97/agent-self-edit-gate.git
 cd agent-self-edit-gate
 bash examples/demo.sh
@@ -48,7 +51,7 @@ that a protected `.github/workflows` path is denied.
 Install from PyPI for normal use:
 
 ```bash
-python -m pip install "agent-self-edit-gate==0.1.1"
+python -m pip install "agent-self-edit-gate==0.1.2"
 selfedit-gate --version
 ```
 
@@ -139,17 +142,17 @@ receipt. The complete order is:
 7. Persist and `fsync` a commit receipt.
 8. Verify the result independently.
 
-Every receipt names the exact policy, before bytes, proposed bytes, operation,
-and prior receipt hash. A crash between intent and commit leaves a dangling
-intent that verification refuses. Details and canonicalization rules are in
-[the receipt protocol](docs/RECEIPTS.md).
+Every receipt records hashes of the exact policy bytes, before content, and
+proposed content, plus the operation and prior receipt hash. A crash between
+intent and commit leaves a dangling intent that verification refuses. Details
+and canonicalization rules are in [the receipt protocol](docs/RECEIPTS.md).
 
 ## Where enforcement comes from
 
 | Deployment | What the gate provides | Security boundary? |
 | --- | --- | --- |
 | Agent voluntarily invokes the CLI | predictable edits and local audit trail | No |
-| Protected CI verifies receipts and Git diff | independent detection before merge | Yes, at merge time |
+| Protected CI verifies an externally anchored receipt chain and the actual diff | independent detection before merge | Yes, at merge time, if the agent cannot rewrite the anchors or checks |
 | OS-isolated writer/broker is the only process that can modify behaviour files | prevention plus receipts | Yes, at write time |
 | Project-local hook the agent can rewrite | convenience interception | No |
 
@@ -179,6 +182,10 @@ explains the positioning. This is not a generic “AI firewall.”
 
 Please use [GitHub private vulnerability reporting](SECURITY.md), not a public
 issue, for suspected vulnerabilities.
+
+Evaluating a writer boundary or trying the gate in an agent workflow? Open an
+[evaluation question](https://github.com/korovin-aa97/agent-self-edit-gate/issues/new?template=question.yml)
+without secrets or private repository details.
 
 ## Development
 
