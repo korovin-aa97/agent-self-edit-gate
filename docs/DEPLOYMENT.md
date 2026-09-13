@@ -15,11 +15,12 @@ editor writes.
 Protect the policy, `.github/workflows`, and receipt journal with CODEOWNERS and
 branch protection. Anchor the previously accepted journal head or journal bytes
 outside the agent's write authority, and reject pull requests that replace or
-truncate that history. In a workflow whose definition and pinned verifier cannot
-be changed by the agent, run:
+truncate that history. Start with the copy-ready
+[GitHub Actions recipe](../examples/protected-ci/README.md). In a workflow whose
+definition and pinned verifier cannot be changed by the agent, run:
 
 ```bash
-python -m pip install "agent-self-edit-gate==0.1.2"
+python -m pip install "agent-self-edit-gate==0.1.3"
 selfedit-gate --policy selfedit-policy.toml verify-receipts
 ```
 

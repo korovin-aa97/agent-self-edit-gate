@@ -1,5 +1,5 @@
-{"env":{"SHELL":"sh","TERM":"xterm-256color"},"height":18,"timestamp":0,"title":"Agent Self-Edit Gate v0.1.2 \u2014 allowed, denied, verified","version":2,"width":96}
-[0.0,"o","\u001b[1;36mAgent Self-Edit Gate\u001b[0m  \u001b[2mreal v0.1.2 CLI output\u001b[0m\r\n\r\n"]
+{"env":{"SHELL":"sh","TERM":"xterm-256color"},"height":18,"timestamp":0,"title":"Agent Self-Edit Gate v0.1.3 \u2014 allowed, denied, verified","version":2,"width":96}
+[0.0,"o","\u001b[1;36mAgent Self-Edit Gate\u001b[0m  \u001b[2mreal v0.1.3 CLI output\u001b[0m\r\n\r\n"]
 [0.8,"o","\u001b[1;32m$\u001b[0m selfedit-gate check .agents/reviewer.md\r\n"]
 [1.8,"o","\u001b[37mmutable: .agents/reviewer.md (shared-agent-behaviour)\u001b[0m\r\n\r\n"]
 [3.6,"o","\u001b[1;32m$\u001b[0m selfedit-gate replace .agents/reviewer.md old.txt new.txt\r\n"]

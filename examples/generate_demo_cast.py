@@ -65,8 +65,8 @@ def _assert_version() -> None:
         encoding="utf-8",
     )
     output = (completed.stdout + completed.stderr).strip()
-    if completed.returncode != 0 or output != "selfedit-gate 0.1.2":
-        raise RuntimeError(f"demo requires selfedit-gate 0.1.2, got {output!r}")
+    if completed.returncode != 0 or output != "selfedit-gate 0.1.3":
+        raise RuntimeError(f"demo requires selfedit-gate 0.1.3, got {output!r}")
 
 
 def _run_step(root: Path, step: Step) -> str:
@@ -109,7 +109,7 @@ def _cast_bytes(repository: Path) -> bytes:
         "width": 96,
         "height": 18,
         "timestamp": 0,
-        "title": "Agent Self-Edit Gate v0.1.2 — allowed, denied, verified",
+        "title": "Agent Self-Edit Gate v0.1.3 — allowed, denied, verified",
         "env": {"SHELL": "sh", "TERM": "xterm-256color"},
     }
     events: list[list[object]] = [
@@ -117,7 +117,7 @@ def _cast_bytes(repository: Path) -> bytes:
             0.0,
             "o",
             "\u001b[1;36mAgent Self-Edit Gate\u001b[0m  "
-            "\u001b[2mreal v0.1.2 CLI output\u001b[0m\r\n\r\n",
+            "\u001b[2mreal v0.1.3 CLI output\u001b[0m\r\n\r\n",
         ]
     ]
     for step, output, (command_time, output_time) in zip(STEPS, outputs, TIMES, strict=True):

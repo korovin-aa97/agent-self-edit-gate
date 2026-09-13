@@ -9,7 +9,7 @@ Prerequisites: Python 3.12+, the project development environment, and
 [`agg` 1.9.0](https://github.com/asciinema/agg/releases/tag/v1.9.0). The checked-in
 GIF uses macOS Menlo from `/System/Library/Fonts`.
 
-The generator creates a disposable root, runs the real local `v0.1.2` CLI for
+The generator creates a disposable root, runs the real local `v0.1.3` CLI for
 the allowed edit, denied authority path, and receipt verification, then checks
 every exit code and complete output line. It fixes only presentation timing and
 replaces the random 32-hex operation ID with `<operation-id>`.

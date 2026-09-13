@@ -21,6 +21,10 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy src tests
+      - name: Validate protected-CI example YAML syntax
+        run: >-
+          ruby -e 'require "yaml";
+          YAML.safe_load_file("examples/protected-ci/verify-receipts.yml", aliases: true)'
 
   test:
     strategy:

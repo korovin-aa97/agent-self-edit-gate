@@ -38,8 +38,8 @@ two-phase, hash-chained receipt.
 ## 15-second demo
 
 ```bash
-python -m pip install "agent-self-edit-gate==0.1.2"
-git clone --depth 1 --branch v0.1.2 \
+python -m pip install "agent-self-edit-gate==0.1.3"
+git clone --depth 1 --branch v0.1.3 \
   https://github.com/korovin-aa97/agent-self-edit-gate.git
 cd agent-self-edit-gate
 bash examples/demo.sh
@@ -51,7 +51,7 @@ that a protected `.github/workflows` path is denied.
 Install from PyPI for normal use:
 
 ```bash
-python -m pip install "agent-self-edit-gate==0.1.2"
+python -m pip install "agent-self-edit-gate==0.1.3"
 selfedit-gate --version
 ```
 
@@ -157,7 +157,10 @@ and canonicalization rules are in [the receipt protocol](docs/RECEIPTS.md).
 | Project-local hook the agent can rewrite | convenience interception | No |
 
 The [deployment guide](docs/DEPLOYMENT.md) describes each pattern without
-pretending a CLI can sandbox its own caller.
+pretending a CLI can sandbox its own caller. A copy-ready
+[protected GitHub Actions recipe](examples/protected-ci/README.md) pins the
+verifier, uses read-only permissions, and checks both receipts and current file
+hashes.
 
 ## Scope compared with adjacent tools
 

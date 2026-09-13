@@ -5,6 +5,20 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-09-13
+
+### Added
+
+- Add a copy-ready protected GitHub Actions recipe that pins the released
+  verifier, grants read-only repository access, and verifies both the receipt
+  journal and current file hashes.
+- Test the example's YAML syntax and security-critical settings in CI.
+
+### Changed
+
+- Document the CODEOWNERS, branch-protection, and external-anchor assumptions
+  that make protected-CI verification independent evidence.
+
 ## [0.1.2] - 2026-09-06
 
 ### Changed
@@ -59,7 +73,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Threat model, protocol references, deployment recipes, hostile tests, packaging,
   CI, security policy, and community files.
 
-[Unreleased]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/korovin-aa97/agent-self-edit-gate/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/korovin-aa97/agent-self-edit-gate/releases/tag/v0.1.0

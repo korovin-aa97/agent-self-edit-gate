@@ -1,6 +1,6 @@
 # Agent Self-Edit Gate — Public Release Plan
 
-Status: v0.1.2 security-documentation patch. Target: an honest public alpha release.
+Status: v0.1.3 protected-CI recipe patch. Target: an honest public alpha release.
 Unchecked items require owner/account action or post-release operation.
 
 ## Release thesis
@@ -146,6 +146,15 @@ Do not execute this phase without an explicit owner instruction.
       agent's authority before protected CI is described as independent evidence.
 - [x] Add a structured evaluation-question path and reproducible public demo assets.
 - [x] Preserve policy schema v1, receipt schema v1, and all existing CLI behavior.
+
+## v0.1.3 protected-CI recipe
+
+- [x] Add a copy-ready workflow outside the repository's own active workflows.
+- [x] Pin the released verifier and actions, and grant only read repository access.
+- [x] Verify the full receipt journal and current target-file hashes.
+- [x] Document CODEOWNERS, branch-protection, external-anchor, and
+      `pull_request_target` assumptions.
+- [x] Validate the example's YAML syntax and security-critical settings in CI.
 
 ## Phase 6 — Launch content, days 2–14
 
